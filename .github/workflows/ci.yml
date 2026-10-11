@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked
+      - name: Lint and type check
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run mypy
+      - name: Unit, contract, integration and evaluation tests
+        run: uv run pytest
+      - name: Evaluation gate (overhead, fallbacks, budgets, PII)
+        run: uv run gw eval --gate
+      - name: Committed OpenAPI spec is current
+        shell: bash
+        run: |
+          uv run gw openapi
+          git diff --exit-code openapi.json
+
+  postgres:
+    name: Postgres budget enforcement
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gw
+          POSTGRES_PASSWORD: gw
+          POSTGRES_DB: gw
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U gw" --health-interval 2s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked --extra postgres
+      - name: Concurrent budget test on Postgres
+        env:
+          GW_TEST_DATABASE_URL: postgresql+psycopg://gw:gw@localhost:5432/gw
+        run: uv run pytest tests/integration/test_postgres.py
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            | tar -xz -C /usr/local/bin gitleaks
+      - name: Scan full history
+        run: gitleaks git . --redact --no-banner --exit-code 1

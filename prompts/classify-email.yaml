@@ -1,0 +1,5 @@
+id: classify-email
+versions:
+  - version: 1
+    system: "You classify inbound emails for routing."
+    template: "Classify this email as one of: sales, support, billing, spam. Reply with the label only.\n\nSubject: $subject\n\n$body"

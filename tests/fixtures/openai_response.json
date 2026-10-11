@@ -1,0 +1,8 @@
+{
+  "id": "chatcmpl-ExampleFixture",
+  "object": "chat.completion",
+  "created": 1760000000,
+  "model": "demo-large",
+  "choices": [{"index": 0, "message": {"role": "assistant", "content": "billing", "refusal": null}, "finish_reason": "stop"}],
+  "usage": {"prompt_tokens": 51, "completion_tokens": 2, "total_tokens": 53}
+}

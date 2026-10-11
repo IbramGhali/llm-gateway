@@ -1,0 +1,64 @@
+[project]
+name = "llm-gateway"
+version = "0.1.0"
+description = "Internal LLM gateway: one API across Claude, GPT and Gemini with per-team model policies, budgets, PII redaction before logging, prompt versioning, fallbacks and a usage ledger."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "typer>=0.12",
+    "rich>=13.7",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "jinja2>=3.1",
+    "httpx>=0.27",
+    "sqlalchemy>=2.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=1.0"]
+openai = ["openai>=1.40"]
+postgres = ["psycopg[binary]>=3.2"]
+
+[project.scripts]
+gw = "llm_gateway.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-PyYAML>=6.0",
+    "httpx2>=0.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_gateway"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["anthropic.*", "openai.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: calls a real provider (set GW_LIVE_TESTS=1)"]
+addopts = "-m 'not live'"

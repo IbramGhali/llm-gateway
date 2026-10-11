@@ -1,0 +1,10 @@
+{
+  "id": "msg_01ExampleFixture",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-5-5",
+  "content": [{"type": "text", "text": "The order arrived damaged and the customer wants a refund."}],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {"input_tokens": 42, "output_tokens": 14}
+}

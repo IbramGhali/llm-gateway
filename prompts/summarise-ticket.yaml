@@ -1,0 +1,8 @@
+id: summarise-ticket
+versions:
+  - version: 1
+    system: "You summarise customer support tickets for the support team."
+    template: "Summarise this ticket in two sentences:\n\n$ticket"
+  - version: 2
+    system: "You summarise customer support tickets for the support team. Be factual and brief."
+    template: "Summarise this ticket in two sentences, then give its category (billing, technical, account, other):\n\n$ticket"

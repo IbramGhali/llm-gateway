@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gateway usage</title>
+<style>
+  :root { --bg: #fff; --fg: #1d2330; --muted: #5b6475; --line: #e3e6ec; --bar: #3b5bdb; --track: #edf0f5; --bad: #b42318; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #11151c; --fg: #e6e9ef; --muted: #9aa3b2; --line: #2a3140; --bar: #7b93f5; --track: #1d2330; --bad: #f97066; } }
+  body { font: 14px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--fg); max-width: 1040px; margin: 0 auto; padding: 24px 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; } h2 { font-size: 15px; margin: 28px 0 8px; }
+  .meta { color: var(--muted); }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .track { background: var(--track); height: 8px; border-radius: 4px; width: 160px; }
+  .fill { background: var(--bar); height: 8px; border-radius: 4px; }
+  .refused, .failed { color: var(--bad); }
+  code { font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>Gateway usage, this month</h1>
+<div class="meta">Provider mode: {{ mode }}. Previews are redacted before storage; raw prompts and completions are never kept.</div>
+
+<h2>Budgets</h2>
+<div class="wrap"><table>
+<thead><tr><th>Team</th><th>Spent (USD)</th><th>Budget (USD)</th><th>Used</th></tr></thead>
+<tbody>
+{% for t in teams %}
+<tr><td>{{ t.id }}</td><td class="num">{{ t.spent }}</td><td class="num">{{ t.budget }}</td>
+<td><div class="track"><div class="fill" style="width: {{ [t.pct, 100]|min }}%"></div></div></td></tr>
+{% endfor %}
+</tbody></table></div>
+
+<h2>By team and model</h2>
+<div class="wrap"><table>
+<thead><tr><th>Team</th><th>Model</th><th>Status</th><th>Requests</th><th>Input tokens</th><th>Output tokens</th><th>Cost (USD)</th><th>p50 ms</th><th>p95 ms</th></tr></thead>
+<tbody>
+{% for u in usage %}
+<tr><td>{{ u.team }}</td><td>{{ u.model or "-" }}</td><td class="{{ u.status.split('_')[0] }}">{{ u.status }}</td><td class="num">{{ u.requests }}</td><td class="num">{{ u.input_tokens or 0 }}</td><td class="num">{{ u.output_tokens or 0 }}</td><td class="num">{{ u.cost }}</td><td class="num">{{ u.p50_ms }}</td><td class="num">{{ u.p95_ms }}</td></tr>
+{% endfor %}
+</tbody></table></div>
+
+<h2>Recent requests</h2>
+<div class="wrap"><table>
+<thead><tr><th>Request</th><th>App</th><th>Asked for</th><th>Served by</th><th>Status</th><th>Fallback</th><th>Preview (redacted)</th></tr></thead>
+<tbody>
+{% for r in recent %}
+<tr><td><code>{{ r.id }}</code></td><td>{{ r.app }}</td><td>{{ r.requested }}</td><td>{{ r.model or "-" }}</td><td class="{{ r.status.split('_')[0] }}">{{ r.status }}</td><td>{{ "yes" if r.fallback_used else "" }}</td><td>{{ r.redacted_preview[:70] }}</td></tr>
+{% endfor %}
+</tbody></table></div>
+</body>
+</html>

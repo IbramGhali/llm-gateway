@@ -1,0 +1,5 @@
+{
+  "candidates": [{"content": {"role": "model", "parts": [{"text": "Technical issue: the app crashes on login."}]}, "finishReason": "STOP", "index": 0}],
+  "usageMetadata": {"promptTokenCount": 37, "candidatesTokenCount": 11, "totalTokenCount": 48},
+  "modelVersion": "demo-flash"
+}

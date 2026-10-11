@@ -1,0 +1,37 @@
+# Gateway + Postgres, offline (fake providers). Then send demo traffic with:
+#   docker compose run --rm traffic
+# and open http://localhost:8080/admin
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: gw
+      POSTGRES_PASSWORD: gw
+      POSTGRES_DB: gw
+    ports: ["5435:5432"]   # 5435 on the host avoids clashing with a local Postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gw"]
+      interval: 2s
+      retries: 20
+
+  gateway:
+    build: .
+    environment:
+      GW_DATABASE_URL: postgresql+psycopg://gw:gw@db:5432/gw
+      GW_PROVIDER_MODE: fake
+    volumes: ["gwdata:/data"]
+    ports: ["8080:8080"]
+    depends_on:
+      db: {condition: service_healthy}
+
+  traffic:
+    build: .
+    profiles: ["tools"]
+    command: ["gw", "traffic", "--url", "http://gateway:8080", "--requests", "80", "--keys", "/data/demo-keys.json"]
+    environment:
+      GW_DATABASE_URL: postgresql+psycopg://gw:gw@db:5432/gw
+    volumes: ["gwdata:/data"]
+    depends_on: [gateway]
+
+volumes:
+  gwdata:
